@@ -1,0 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@1,300&family=Roboto+Slab:wght@400;900&family=Signika+Negative&display=swap');
+
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Merriweather', serif;
+  font-family: 'Roboto Slab', serif;
+  font-family: 'Signika Negative', sans-serif;
+}
