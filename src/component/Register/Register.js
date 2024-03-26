@@ -10,11 +10,11 @@ const validate = (values) => {
     errors.name = "* Name field should not be empty";
   }
 
-  // if (!values.email) {
-  //   errors.email = "* Email field should not be empty";
-  // } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.email)) {
-  //   errors.email = "* Enter Valid Email Id";
-  // }
+  if (!values.email) {
+    errors.email = "* Email field should not be empty";
+  } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.email)) {
+    errors.email = "* Enter Valid Email Id";
+  }
   if (!values.password) {
     errors.password = "* Password field should not be empty";
   }
