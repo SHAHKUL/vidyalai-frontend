@@ -39,8 +39,6 @@ body {
   color: white;
   box-shadow: 0 .75rem .5rem -.5rem hsl(0 50% 80%);
   transition: 200ms ease-in;
-
-
 }
 
 .popup-button:hover {

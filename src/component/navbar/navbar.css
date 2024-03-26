@@ -93,19 +93,16 @@ a {
   border-radius: 14px;
   font-weight: bold;
   font-size: 27px;
-
   border: 0;
-
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
-
 }
 
 
 
 
-    /* Media Queries */
+   /* //// Media Queries/// */
 
 
 

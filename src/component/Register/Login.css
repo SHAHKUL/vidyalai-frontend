@@ -33,7 +33,6 @@
 .brand-logo-login {
 	height: 100px;
 	width: 100px;
-
 	margin: auto;
 	border-radius: 50%;
 	box-sizing: border-box;
@@ -44,7 +43,6 @@
 	margin-top: 10px;
 	height: 80px;
 	width: 80px;
-
 }
 
 
@@ -59,7 +57,6 @@
 
 .inputs-login {
 	text-align: left;
-
 	margin-top: -60px;
 }
 
@@ -128,7 +125,7 @@
 }
 
 
-/* cube logics */
+/* book logics */
 
 
 .main-book {
