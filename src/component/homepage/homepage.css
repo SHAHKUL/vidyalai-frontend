@@ -21,3 +21,12 @@
     height: 1000px;
     width: 500px;
 }
+
+.alingment-head {
+    display: flex;
+    height: 30px;
+    width: 670px;
+    justify-content: flex-start;
+    align-items: center;
+
+}

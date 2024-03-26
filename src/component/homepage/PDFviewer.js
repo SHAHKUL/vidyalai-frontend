@@ -304,16 +304,16 @@ const PDFViewer = ({ dark }) => {
                   />
                 ) : null}
               </div>
+              <div style={{display:'flex',justifyContent:"flex-start"}}>
               <h1
+                className="alingment-head"
                 style={{
-                  display: "flex",
-                  alignSelf: "center",
                   color: dark ? "#FFFFFF" : "#000000",
-                  marginRight: "580px",
                 }}
               >
                 {title ? title : toggle.name}
               </h1>
+              </div>
             </div>
             <Document
               className="no-pdf"
