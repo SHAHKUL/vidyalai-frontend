@@ -1,12 +1,12 @@
 import React from "react";
-
+import "./popup.css";
 function Popup(props) {
   const { show, setShow, setFrom, setTo, handle, handleDownloadPage } = props;
   return (
     <div className="logic">
       <i
         id="cancel-mark"
-        class="fa-solid fa-xmark fa-beat fa-3x"
+        className="fa-solid fa-xmark fa-beat fa-3x"
         onClick={() => setShow(!show)}
       ></i>
 
@@ -28,7 +28,7 @@ function Popup(props) {
       <i
         id="download"
         onClick={handleDownloadPage}
-        class="fa-solid fa-circle-down fa-3x fa-bounce"
+        className="fa-solid fa-circle-down fa-3x fa-bounce"
       ></i>
     </div>
   );

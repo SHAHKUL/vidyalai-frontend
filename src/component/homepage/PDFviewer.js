@@ -1,10 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import axios from "axios";
-import ControlPanel from "./Controlpanel";
 import { PDFDocument } from "pdf-lib";
-import Card from "./Card";
-import Popup from "./Popup";
+import swal from "sweetalert";
+import { useSelector } from "react-redux";
+import ControlPanel from "../controlpanel/Controlpanel";
+
+import Cards from "../card/Cards";
+import Popup from "../popup/Popup";
+import { Url } from "../../Url";
+
+import Pages from "../pages/Pages";
+import "./homepage.css";
 
 // Set the worker source to be used for PDF.js
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -30,9 +37,9 @@ const PDFViewer = ({ dark }) => {
   const [show, setShow] = useState(false);
 
   const [pdfFileData, setPdfFileData] = useState();
-  ////////////////////////////extracted data/////////
-  const [extrlist, setextrlist] = useState([]);
-  const [extr, setextr] = useState();
+  const [arr, setArr] = useState([]);
+  const [log, setLog] = useState(false);
+  const { token } = useSelector((state) => state.auth);
 
   const fileType = ["application/pdf"];
   const handlechange = (e) => {
@@ -48,7 +55,7 @@ const PDFViewer = ({ dark }) => {
         setPdf(null);
       }
     } else {
-      console.log("please selcect");
+      console.log("please select");
     }
   };
 
@@ -56,10 +63,8 @@ const PDFViewer = ({ dark }) => {
     e.preventDefault();
     if (pdf !== null) {
       setView(pdf);
-      console.log(pdf);
-
       await axios.post(
-        `https://vidyalai-code.onrender.com/create`,
+        `${Url}/pdf/create`,
         {
           name: title,
           files: pdf,
@@ -67,7 +72,7 @@ const PDFViewer = ({ dark }) => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            auth: window.localStorage.getItem("vidyalai"),
+            auth: token,
           },
         }
       );
@@ -80,45 +85,72 @@ const PDFViewer = ({ dark }) => {
 
   useEffect(() => {
     fetch();
-    fetchExtractedpdf();
   }, []);
 
   const fetch = async () => {
-    const res = await axios.get(`https://vidyalai-code.onrender.com/get`, {
-      headers: {
-        auth: window.localStorage.getItem("vidyalai"),
-      },
-    });
-    setList(res.data);
+    try {
+      setLog(true);
+      const res = await axios.get(`${Url}/pdf/get`, {
+        headers: {
+          auth: token,
+        },
+      });
+      setLog(false);
+      setList(res.data);
+      setArr([]);
+    } catch (error) {
+      console.log(error);
+    }
   };
-
-  const handleDelete = async (id) => {
-    await axios.delete(`https://vidyalai-code.onrender.com/delete/${id}`, {
-      headers: {
-        auth: window.localStorage.getItem("vidyalai"),
-      },
-    });
-
-    fetch();
-  };
-
   const handleView = async (ide) => {
-    var res = await axios.get(`https://vidyalai-code.onrender.com/get/${ide}`, {
-      headers: {
-        auth: window.localStorage.getItem("vidyalai"),
-      },
+    try {
+      setLog(true);
+      var res = await axios.get(`${Url}/pdf/get/${ide}`, {
+        headers: {
+          auth: token,
+        },
+      });
+      setLog(false);
+      setToggle(res.data);
+      setArr([]);
+      setTitle("");
+      //////////////////url pasete in popup//////////////////
+      dataURLtoBlob(res.data.file);
+      setView(false);
+      fetch();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const handleDelete = (id) => {
+    swal({
+      title: "Are you sure?",
+      text: "Once deleted, your PDF Will not be able to recoverd !!!",
+      icon: "warning",
+      buttons: true,
+      dangerMode: true,
+    }).then((willDelete) => {
+      if (willDelete) {
+        setLog(true);
+        axios.delete(`${Url}/pdf/delete/${id}`, {
+          headers: {
+            auth: token,
+          },
+        });
+        fetch();
+        setLog(false);
+
+        swal("Poof! Your  file has been deleted Successfully!!", {
+          icon: "success",
+        });
+      } else {
+        swal("Your PDF file is safe!");
+      }
     });
-    setToggle(res.data);
-    setTitle("");
-    //////////////////url pasete in popup//////////////////
-    dataURLtoBlob(res.data.file);
-    setView(!pdf);
-    fetch();
   };
 
   const onDocumentLoadSuccess = ({ numPages }) => {
     setNumPages(numPages);
-
     setPageNumber(1);
   };
 
@@ -146,14 +178,17 @@ const PDFViewer = ({ dark }) => {
   ///////////////////////////main three logic//////////////////////////
   const handle = async () => {
     const pdfArrayBuffer = mock;
-    console.log(pdfArrayBuffer);
     const newPdfDoc = await extractPdfPage(pdfArrayBuffer, from, to);
     renderPdf(newPdfDoc);
   };
+
   async function extractPdfPage(arrayBuff, m, n) {
     const pdfSrcDoc = await PDFDocument.load(arrayBuff);
     const pdfNewDoc = await PDFDocument.create();
-    const pages = await pdfNewDoc.copyPages(pdfSrcDoc, range(m, n));
+    const pages = await pdfNewDoc.copyPages(
+      pdfSrcDoc,
+      from ? range(m, n) : arr
+    );
     pages.forEach((page) => pdfNewDoc.addPage(page));
     const newpdf = await pdfNewDoc.save();
     return newpdf;
@@ -163,6 +198,22 @@ const PDFViewer = ({ dark }) => {
     let length = end - start + 1;
     return Array.from({ length }, (_, i) => start + i - 1);
   }
+
+  const specficPages = (val) => {
+    var str = arr.indexOf(val);
+
+    if (str === -1) {
+      setFrom("");
+      return setArr([...arr, val]);
+    } else {
+      setFrom("");
+      arr.splice(str, 1);
+      return setArr([...arr]);
+    }
+  };
+  const emptyArray = () => {
+    setArr([]);
+  };
 
   function renderPdf(uint8array) {
     const tempblob = new Blob([uint8array], {
@@ -179,71 +230,26 @@ const PDFViewer = ({ dark }) => {
   const handleDownloadPage = () => {
     const targetPageNumber = toggle.name;
     const pdfPath = pdfFileData;
-    console.log(pdfPath);
     // Create a link element to trigger the download
     const link = document.createElement("a");
     link.href = `${pdfPath}#page=${targetPageNumber}`;
     link.download = `page_${targetPageNumber}.pdf`; // Customize the downloaded file name
     link.click();
-    extractedpdf(pdfFileData, targetPageNumber);
-  };
-
-  ////////////////////////////extracted pdf///////////////////////////////////////
-  const extractedpdf = async (data, name) => {
-    const tempblob = new Blob([data], {
-      type: "application/pdf",
-    });
-
-    const blob = tempblob; // Your Blob object
-    const reader = new FileReader();
-    reader.readAsDataURL(blob);
-    reader.onload = () => {
-      setextr(reader.result);
-    };
-
-    await axios.post(
-      `https://vidyalai-code.onrender.com/extract/`,
-      { name, file: extr },
-      {
-        headers: {
-          auth: window.localStorage.getItem("vidyalai"),
-        },
-      }
-    );
-  };
-
-  const fetchExtractedpdf = async () => {
-    var res = await axios.get(`https://vidyalai-code.onrender.com/extract`, {
-      headers: {
-        auth: window.localStorage.getItem("vidyalai"),
-      },
-    });
-    setextrlist(res.data);
-    console.log(extrlist);
-  };
-
-  const handleRemove = async (id) => {
-    await axios.delete(`https://vidyalai-code.onrender.com/delete/${id}`, {
-      headers: {
-        auth: window.localStorage.getItem("vidyalai"),
-      },
-    });
-    fetchExtractedpdf();
   };
 
   return (
     <div>
       <div className="container">
         <form onSubmit={handleSubmit}>
-          <div class="form-box">
+          <div className="form-box">
             <h3>Title</h3>
             <input
-              class="form-control"
+              className="form-control"
               type="text"
               onChange={(e) => setTitle(e.target.value)}
             />
             <input
-              class="form-control"
+              className="form-control"
               type="file"
               id="formFile"
               accept="application/pdf"
@@ -269,7 +275,7 @@ const PDFViewer = ({ dark }) => {
               className="btn btn-warning"
               onClick={() => setMulti(!multi)}
             >
-              {multi ? "Multi Page" : "Single Page"}{" "}
+              {multi ? "Multi Page" : "Single Page"}
             </button>
           </div>
           <button
@@ -284,49 +290,40 @@ const PDFViewer = ({ dark }) => {
           </button>
         </div>
         <div className="main-box">
-          <div className="left-box">
-            {/* <h1 style={{ color: dark ? "#FFFFFF" : "#000000" }}>Extracted</h1>
-            <div style={{ height: "200px", width: "200px" }}>
-              {extrlist === null
-                ? " "
-                : extrlist.map((cur) => {
-                    return (
-                      <>
-                        <Card
-                        key={cur._id}
-                          cur={cur}
-                          onDocumentLoadSuccess={onDocumentLoadSuccess}
-                          pageNumber={pageNumber}
-                          handleView={handleView}
-                          handleRemove={handleRemove}
-                        />
-                      </>
-                    );
-                  })}
-            </div> */}
-          </div>
+          <div className="left-box"></div>
           {/* ////////////////////center-box-229////// */}
           <div className="center-box">
-            <h1
-              style={{
-                position: "absolute",
-                top: "550px",
-                left: "720px",
-                marginTop: "100px",
-                color: dark ? "#FFFFFF" : "#000000",
-              }}
-            >
-              {title ? title : toggle.name}
-            </h1>
-
+            <div className="alingment">
+              <div className="sticky-pages">
+                {arr.length > 0 ? (
+                  <Pages
+                    arr={arr}
+                    handle={handle}
+                    handleDownloadPage={handleDownloadPage}
+                    emptyArray={emptyArray}
+                  />
+                ) : null}
+              </div>
+              <h1
+                style={{
+                  display: "flex",
+                  alignSelf: "center",
+                  color: dark ? "#FFFFFF" : "#000000",
+                  marginRight: "580px",
+                }}
+              >
+                {title ? title : toggle.name}
+              </h1>
+            </div>
             <Document
+              className="no-pdf"
               file={view ? view : toggle.file}
               onLoadSuccess={onDocumentLoadSuccess}
             >
               {multi ? (
                 <div className="pdf">
                   <Page
-                    width="800"
+                    width={800}
                     className="pdf-container"
                     pageNumber={pageNumber}
                     scale={scale}
@@ -337,6 +334,14 @@ const PDFViewer = ({ dark }) => {
               ) : (
                 Array.from(new Array(numPages), (el, idx) => (
                   <>
+                    <span className="check">
+                      <button
+                        onClick={() => specficPages(idx)}
+                        className="check-button"
+                      >
+                        <input type="checkbox" className="checkbox-button" />
+                      </button>
+                    </span>
                     <div className="pdf-multi">
                       <Page
                         key={`page_${idx + 1}`}
@@ -359,23 +364,20 @@ const PDFViewer = ({ dark }) => {
           <div className="right-box">
             <h1 style={{ color: dark ? "#FFFFFF" : "#000000" }}>Uploaded</h1>
             <div style={{ height: "200px", width: "200px" }} className="small">
-              {list === null
-                ? " "
-                : list.map((cur) => {
-                    console.log(cur);
-                    return (
-                      <>
-                        <Card
-                          key={cur._id}
-                          cur={cur}
-                          onDocumentLoadSuccess={onDocumentLoadSuccess}
-                          pageNumber={pageNumber}
-                          handleView={handleView}
-                          handleRemove={handleDelete}
-                        />
-                      </>
-                    );
-                  })}
+              {list?.map((cur) => {
+                return (
+                  <div key={cur._id}>
+                    <Cards
+                      key={cur._id}
+                      cur={cur}
+                      onDocumentLoadSuccess={onDocumentLoadSuccess}
+                      pageNumber={pageNumber}
+                      handleView={handleView}
+                      handleRemove={handleDelete}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -391,6 +393,20 @@ const PDFViewer = ({ dark }) => {
               handleDownloadPage={handleDownloadPage}
             />
           </div>
+        )}
+        {log && (
+          <span className="main-book-two">
+            <div className="full-book">
+              <div className="book">
+                <div className="book__pg-shadow"></div>
+                <div className="book__pg"></div>
+                <div className="book__pg book__pg--2"></div>
+                <div className="book__pg book__pg--3"></div>
+                <div className="book__pg book__pg--4"></div>
+                <div className="book__pg book__pg--5"></div>
+              </div>
+            </div>
+          </span>
         )}
       </div>
     </div>

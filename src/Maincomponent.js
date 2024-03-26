@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
-import Navbar from "./component/Navbar";
-import PDFViewer from "./component/PDFviewer";
+import Navbar from "./component/navbar/Navbar";
+import PDFViewer from "./component/homepage/PDFviewer";
 
 function Maincomponent() {
   const [dark, setDark] = useState(false);

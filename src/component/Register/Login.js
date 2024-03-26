@@ -3,11 +3,16 @@ import "./Login.css";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useFormik } from "formik";
+import { useDispatch } from "react-redux";
+import { login } from "../redux/authSlice";
 
 import axios from "axios";
+import { Url } from "../../Url";
 function Login() {
   const [err, setErr] = useState("");
+  const [log, setLog] = useState(false);
   let navigate = useNavigate();
+  const dispatch = useDispatch();
   let formik = useFormik({
     initialValues: {
       email: "",
@@ -15,30 +20,36 @@ function Login() {
     },
     onSubmit: async (val) => {
       try {
-        var res = await axios.post(`https://vidyalai-code.onrender.com/login`, val);
-        window.localStorage.setItem("vidyalai", res.data.token);
+        setLog(true);
+        var res = await axios.post(`${Url}/user/login`, val);
+        dispatch(login(res.data));
+
         if (res.data.token) {
+          setLog(false);
           navigate("/home");
         } else {
-          console.log(res.data.message);
           setErr(res.data.message);
+          setLog(false);
         }
-      } catch (error) {}
+      } catch (error) {
+        console.log(error);
+      }
     },
   });
   return (
     <div className="body-login">
-      <div class="container-login">
-        <div class="brand-logo-login">
+      <div className="container-login">
+        <div className="brand-logo-login">
           <img
             className="image"
             src="https://react-pdf.org/images/logo.png"
+            alt="pdf-extractor-logo"
           ></img>
         </div>
-        <div class="brand-title-login">PDf-Extractor</div>
+        <div className="brand-title-login">PDf-Extractor</div>
         <h1 style={{ color: "#B32624" }}>Login</h1>
         <form className="form-login" onSubmit={formik.handleSubmit}>
-          <div class="inputs-login">
+          <div className="inputs-login">
             <label className="label-login">EMAIL</label>
             <input
               className="input-login"
@@ -57,6 +68,20 @@ function Login() {
               onChange={formik.handleChange}
             />
             <p style={{ color: "red" }}>{`${err}`}</p>
+            {log && (
+              <span className="main-book">
+                <div className="full-book">
+                  <div className="book">
+                    <div className="book__pg-shadow"></div>
+                    <div className="book__pg"></div>
+                    <div className="book__pg book__pg--2"></div>
+                    <div className="book__pg book__pg--3"></div>
+                    <div className="book__pg book__pg--4"></div>
+                    <div className="book__pg book__pg--5"></div>
+                  </div>
+                </div>
+              </span>
+            )}
             <button className="button-login" type="submit">
               Login
             </button>
